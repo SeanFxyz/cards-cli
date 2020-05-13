@@ -5,6 +5,7 @@ class State(Enum):
     LOBBY = 0
     PROMPT = 1
     SELECT = 2
+    DISPLAY = 3
 
 def success(text):
     lines = text.splitlines()
@@ -122,7 +123,7 @@ def submit(url, session_id, sub):
 def select(url, session_id, sel_id):
     sel_json = json.dumps([sel_id])
     data = {"session_id":session_id, "cmd":"select", "args":sel_json}
-    r = requests.post(url + "/select", data=data)
+    r = requests.post(url + "/cmd", data=data)
     text = success(r.text)
     if text[0]:
         return text[1]
@@ -204,8 +205,9 @@ if __name__ == "__main__":
         exit(0)
 
     # game_id set, attempt join
-    print("Enter password:")
-    password = input()
+    # print("Enter password:")
+    # password = input()
+    password = ""
     if bool(session_id) == False:
         session_id = joinGame(url, game_id, player_id, password)
     if session_id == False:
@@ -216,7 +218,6 @@ if __name__ == "__main__":
     quit = False
     while quit == False:
         
-        print("Waiting for game to begin...")
         qry = qryGame(url, session_id)
         if bool(qry) == False:
             print("Initial query failed.")
@@ -251,10 +252,10 @@ if __name__ == "__main__":
         cards_submitted = 0
         sub = []
         sub_text = []
+        print("Czar: ", qry["players"][czar], sep="")
+        print("Prompt: ", call, sep="")
         if czar != player_id:
             while cards_submitted < cards_req:
-                print("Czar: ", qry["players"][czar], sep="")
-                print("Prompt: ", call, sep="")
 
                 print("-------------------------")
                 
@@ -289,6 +290,7 @@ if __name__ == "__main__":
                 " to pick a favorite...", sep="")
         while State(qry["state"]) == State.SELECT:
             if qry["czar"] == player_id:
+                print("Prompt: ", call, sep="")
                 subs = qry["subs"]
                 input_prompt = ""
                 for n in range(len(subs)):
@@ -296,14 +298,21 @@ if __name__ == "__main__":
                     sub_player_id = sub["player_id"]
                     sub_player_name = qry["players"][sub_player_id]
                     input_prompt += str(n + 1) + ". " + sub_player_name + ":\n"
-                    for m in len(sub["cards"]):
+                    for m in range(len(sub["cards"])):
                         card = sub["cards"][m]
-                        input_prompt += "\n" + unpackCardText(card["text"]) + "\n"
+                        input_prompt += " * " + unpackCardText(card["text"])+'\n'
 
-                sel_input = getIntInput(1, len(subs)) - 1
+                input_prompt += "Select a submission:"
+                sel_input = getIntInput(input_prompt, 1, len(subs)) - 1
                 sel_id = subs[sel_input]["player_id"]
-                select(sel_id)
+                select(url, session_id, sel_id)
             else:
                 time.sleep(2)
+
+            qry = qryGame(url, session_id)
+
+        while State(qry["state"]) == State.DISPLAY:
+            # TODO: Show selection and other submissions.
+
             qry = qryGame(url, session_id)
 
