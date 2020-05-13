@@ -311,8 +311,23 @@ if __name__ == "__main__":
 
             qry = qryGame(url, session_id)
 
+        subs = qry["subs"]
+        czar_name = qry["players"][qry["czar"]]
+        losers = []
+        for sub in qry["subs"]:
+            if sub["player_id"] == qry["selection"]:
+                print("Czar " + czar_name + "'s pick:")
+                for card in sub["cards"]:
+                    print(" * " + unpackCardText(card["text"]))
+            else:
+                losers.append(sub)
+        print("Other submissions:")
+        for sub in losers:
+            print(qry["players"][sub["player_id"]] + ":")
+            for card in sub["cards"]:
+                print(" * " + unpackCardText(card["text"]))
+            
+
         while State(qry["state"]) == State.DISPLAY:
-            # TODO: Show selection and other submissions.
-
+            time.sleep(2)
             qry = qryGame(url, session_id)
-
