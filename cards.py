@@ -224,6 +224,7 @@ if __name__ == "__main__":
             exit(1)
         while State(qry["state"]) == State.LOBBY:
             print("Waiting for game start.")
+            print("Game ID: " + qry["game_id"])
             print("Players: ",
                     (str(qry["player_count"]) + "/" + str(qry["max_players"])),
                     sep="")
